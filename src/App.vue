@@ -1,29 +1,79 @@
 <template>
-  <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view />
+  <Loader v-if="!loaded"/>
+  <div id="app" v-else>
+    <NavBar />
+    <SideNav />
+    <router-view></router-view>
+    <FootBar />
   </div>
 </template>
 
-<style lang="scss">
-#app {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-#nav {
-  padding: 30px;
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-    &.router-link-exact-active {
-      color: #42b983;
+<script>
+import NavBar from '@/components/NavBar'
+import SideNav from '@/components/SideNav'
+import FootBar from '@/components/FootBar'
+import { mapGetters, mapActions } from 'vuex';
+
+const actions = ['fetchItems', 'getUid'];
+const getters = ['info','error'];
+
+export default {
+  name: "app",
+  data: () => ({
+    loaded: false
+  }),
+  computed: {
+    ...mapGetters(getters),
+  },
+  methods: {
+    ...mapActions(actions),
+  },
+  async mounted() {
+    await this.fetchItems();
+    await this.getUid();
+    this.loaded = true;
+  },
+  watch: {
+    error(val) {
+      console.log('unexpected error:', val);
+      if (val.code === 'auth/wrong-password') M.toast({html: 'Неправильный пароль'});
+      if (val.code === 'auth/user-not-found') M.toast({html: 'Неправильная почта'});
     }
+  },
+  components: {
+    NavBar,
+    SideNav,
+    FootBar,
+
   }
+};
+</script>
+
+<style lang="scss">
+@import "~materialize-css/dist/css/materialize.min.css";
+@import url("https://fonts.googleapis.com/icon?family=Material+Icons");
+body {
+  background-color: #efefef;
+}
+/*::-webkit-scrollbar {*/
+/*  width: 0;*/
+/*}*/
+.unselectable {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;           
+}
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .5s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+.more { // global for footer margin
+  padding-bottom: 1vw;
+  margin-bottom: 64px;
 }
 </style>
