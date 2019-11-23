@@ -1,30 +1,20 @@
 <template>
-  <main>
+  <main v-if="!loaded">
+    <Loader></Loader>
+  </main>
+  <main v-else>
     <div class="options">
 
-      <div class="input-field" id="filter">
-        <select multiple ref="selectMultiple" v-model="filter">
-          <optgroup label="Основные категории">
-            <option v-for="bigCat of parentCategory" :value="bigCat.name"><b>{{ bigCat.name }} ({{ bigCat.quantity }})</b></option>
-          </optgroup>
-          <optgroup label="Подкатегории">
-            <option v-for="underCat of childCategory" :value="underCat.name">{{ underCat.name }} ({{ underCat.quantity }})</option>
-          </optgroup>
-        </select>
-        <label>Фильтр</label>
-      </div>
+      <FilterItems
+        @change="changeFilter"
+      />
 
-      <div class="input-field" id="sort">
-        <select ref="select" v-model.number="sort">
-          <option value="0">Сначала новое</option>
-          <option value="1">По возрастанию цены</option>
-          <option value="2">По убыванию цены</option>
-        </select>
-        <label>Сортировать</label>
-       </div>
+      <SortItems
+        @change="changeSort"
+      />
 
       <div class="input-field" id="search">
-        <input id="look_for" type="text" class="validate" v-model="searched">
+        <input id="look_for" type="text" class="validate" v-model.trim="searched">
         <label for="look_for">Поиск</label>
       </div>
     </div>
@@ -57,26 +47,23 @@
 <script>
 import paginationMixin from '@/mixins/pagination.mixin'
 import CardItem from '@/components/CardItem';
+import SortItems from '@/components/SortItems';
+import FilterItems from '@/components/FilterItems'
 
 import { mapGetters, mapActions } from 'vuex';
 
-const getters = ['items', 'parentCategory', 'childCategory'];
+const getters = ['items'];
 const actions = ['sorting'];
 
 export default {
   name: "shop",
   mixins: [paginationMixin],
   data: () => ({
-    select: null,
-    selectMultiple: null,
-    options: {
-      coverTrigger: false, // Shows dropdown below the trigger
-      constrainWidth: true, // Can be wider then dropdown initiator
-    },
     filter: [],
     sort: 1,
     FiltredAndSortedItems: [],
     searched: '',
+    loaded: false,
 
   }),
   computed: {
@@ -132,31 +119,36 @@ export default {
 
       this.FiltredAndSortedItems = items;
       this.setupPagination(items);
+      this.loaded = true;
       return this.allItems[this.page - 1] || this.allItems[0];
     },
 
   },
   components: {
     CardItem,
-  },
-  mounted() {
-    this.select = this.$refs.select;
-    this.selectMultiple = this.$refs.selectMultiple;
-    this.select = M.FormSelect.init(this.select, { dropdownOptions: this.options });
-    this.selectMultiple = M.FormSelect.init(this.selectMultiple, { dropdownOptions: this.options });
-  },
-  beforeDestroy() {
-    if (this.select && this.select.destroy) this.select.destroy();
-    if (this.selectMultiple && this.selectMultiple.destroy) this.selectMultiple.destroy();
+    SortItems,
+    FilterItems,
+
   },
   watch: {
     page() {
       scrollTo(0, 0);
-    }
+    },
+    items(val) {
+      if (val.length) {
+        this.loaded = true;
+      }
+    },
+
   },
   methods: {
     ...mapActions(actions),
-
+    changeSort(val) {
+      this.sort = val;
+    },
+    changeFilter(val) {
+      this.filter = val;
+    },
   }
 };
 </script>
@@ -203,8 +195,6 @@ main {
   .pagination {
     text-align: center;
   }
-}
-@media (max-width: 600px) {
   main {
     margin: 0 0 -56px;
   }

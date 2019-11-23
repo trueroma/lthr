@@ -1,6 +1,5 @@
 <template>
-  <Loader v-if="!loaded"/>
-  <div id="app" v-else>
+  <div id="app">
     <NavBar />
     <SideNav />
     <router-view></router-view>
@@ -15,13 +14,11 @@ import FootBar from '@/components/FootBar'
 import { mapGetters, mapActions } from 'vuex';
 
 const actions = ['fetchItems', 'getUid'];
-const getters = ['info','error'];
+const getters = ['info', 'error'];
 
 export default {
   name: "app",
-  data: () => ({
-    loaded: false
-  }),
+  data: () => ({}),
   computed: {
     ...mapGetters(getters),
   },
@@ -31,7 +28,6 @@ export default {
   async mounted() {
     await this.fetchItems();
     await this.getUid();
-    this.loaded = true;
   },
   watch: {
     error(val) {
